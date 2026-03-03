@@ -32,13 +32,13 @@ import WillAIGrid from "../imports/Group8777";
 
 // ── Feature descriptions ──────────────────────────────────────────────────────
 const buttonDescriptions: Record<string, string> = {
-  "智慧生产": "通过AI多模态监系统实时采集工艺参数，构建数字孪生工厂，实现生产全流程可视化与智优化。AI预测排产系统融合订单、库存与设备数据，秒级生成最优排产方案，提升交付准时率至98%。",
+  "智慧生产": "通过AI多模态监控系统实时采集工艺参数，构建数字孪生工厂，实现生产全流程可视化与智能优化。AI预测排产系统融合订单、库存与设备数据，秒级生成最优排产方案，提升交付准时率至98%。",
   "智慧运维": "通过设备预测性保养模型，提前识别故障风险，制定精准维护计划，降低突发停机损失。远程诊断与干预系统实现故障快速修复，提升设备可用性与服务响应速度。",
   "智慧研发": "爱士维将AI技术深度融入研发全流程，构建「超级BOM」系统，实现物料清单的智能优化与动态管理，代码自动生成率超70%，研发周期缩短40%。",
   "智慧测试": "构建行业级智能失效分析闭环系统，实现测试数据自动收集、分析与反馈。测试覆盖率提升至95%，缺陷预测准确率达90%。",
   "智慧供应链": "爱士维构建供应商360度分析评级系统，从质量、交期、价格等多维度评估供应商表现，实现风险预警与智能调度。库存周转率提升 35%。",
   "智慧销售": "基于销售历史与市场动态数据，AI预测模型精准研判销售波动趋势，助力制定精准营销策略。系统支持动态定价与促销策略。",
-  "智慧能源": "爱士��构建虚拟电厂（VPP）平台，整合分布式光伏、储能与可控负荷，现智能调度与电力市场交易。推动园区能源结构优化与碳减排。",
+  "智慧能源": "爱士维构建虚拟电厂（VPP）平台，整合分布式光伏、储能与可控负荷，现智能调度与电力市场交易。推动园区能源结构优化与碳减排。",
 };
 
 // ── Module sub-project types & data ──────────────────────────────────────────
@@ -220,7 +220,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
   "智慧测试": [],
 };
 
-// ── Module header config ─────────────────────────────────────────────��────────
+// ── Module header config ───────────────────────────────────────────��─────────
 const moduleConfig: Record<string, { icon: React.ElementType; accent: string; glow: string; iconBg: string }> = {
   "智慧生产":   { icon: Factory,     accent: "text-indigo-200",  glow: "rgba(99,102,241,0.4)",   iconBg: "bg-indigo-500/20 border-indigo-400/40" },
   "智慧销售":   { icon: TrendingUp,  accent: "text-emerald-200", glow: "rgba(52,211,153,0.35)",  iconBg: "bg-emerald-500/20 border-emerald-400/40" },
@@ -231,7 +231,7 @@ const moduleConfig: Record<string, { icon: React.ElementType; accent: string; gl
   "智慧测试":   { icon: ShieldCheck, accent: "text-green-200",   glow: "rgba(34,197,94,0.35)",   iconBg: "bg-green-500/20 border-green-400/40" },
 };
 
-// ── Will AI capabilities ��─────────────────────────────────────────────────────
+// ── Will AI capabilities ─────────────────────────────────────────────────────
 const willAICapabilities = [
   {
     id: "ems",
@@ -264,7 +264,7 @@ const willAICapabilities = [
     id: "integration",
     icon: GitMerge,
     title: "灵活交互与集成",
-    desc: "多种集成和交互模式，跨平台链接数据与体验，全��位解决业务痛点问题",
+    desc: "多种集成和交互模式，跨平台链接数据与体验，全位解决业务痛点问题",
     color: "from-cyan-500/20 to-teal-500/10",
     iconColor: "text-cyan-400",
     tag: "开放集成",
