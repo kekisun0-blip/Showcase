@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Bot, Cpu, Globe, GitMerge, Workflow, LayoutGrid, ArrowRight, Map } from "lucide-react";
+import React from "react";
+import { motion } from "motion/react";
+import { Bot, Cpu, Globe, GitMerge, Workflow, LayoutGrid, ArrowRight, ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import imgCharacter  from "figma:asset/145c786e2bcf2cb85c225b58b4e005b4d38df06c.png";
 import imgBuilding   from "figma:asset/95e2ed1da8f8de1ccb3dbdeb24b41e65d109f310.png";
@@ -10,7 +10,6 @@ import imgTech       from "figma:asset/69ce36e9592679935f50266725dba25bfee647af.
 import imgEnergyApp  from "figma:asset/79d56327708d4e6d10e03edba5f55fa987bacfdf.png";
 import imgWarehouse  from "figma:asset/6f3e930441b54e23c53e758a77a28c8b0ea11741.png";
 import imgRndPanel   from "figma:asset/c9faab36d56f13e9ecb10a6e7746c2a0e6074227.png";
-import { BlueprintModal } from "./BlueprintModal";
 
 // ── 七大智慧模块配置 ─────────────────────────────────────────────────────────
 const MODULE_CARDS = [
@@ -82,7 +81,13 @@ interface DefaultRightPanelProps {
 }
 
 export function DefaultRightPanel({ onWillAIClick, onModuleClick }: DefaultRightPanelProps) {
-  const [showBlueprint, setShowBlueprint] = useState(false);
+  const [isAtEnd, setIsAtEnd] = React.useState(false);
+
+  const handleScroll = React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+    setIsAtEnd(atEnd);
+  }, []);
 
   return (
     /* ── 固定 70vh 高度容器，两卡垂直填满 ────────────────────────────── */
@@ -196,27 +201,38 @@ export function DefaultRightPanel({ onWillAIClick, onModuleClick }: DefaultRight
                 七大 AI 智慧场景 · 点击进入
               </p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.93 }}
-              onClick={() => setShowBlueprint(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full cursor-pointer"
-              style={{
-                background: "rgba(167,139,250,0.14)",
-                border: "1px solid rgba(167,139,250,0.32)",
+            <motion.div
+              className="flex items-center gap-1.5 cursor-pointer"
+              onClick={(e) => {
+                const scrollContainer = e.currentTarget.parentElement?.nextElementSibling;
+                if (scrollContainer) {
+                  if (isAtEnd) {
+                    scrollContainer.scrollTo({ left: 0, behavior: "smooth" });
+                  } else {
+                    scrollContainer.scrollTo({ left: scrollContainer.scrollWidth, behavior: "smooth" });
+                  }
+                }
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "rgba(167,139,250,0.26)")}
-              onMouseLeave={e => (e.currentTarget.style.background = "rgba(167,139,250,0.14)")}
             >
-              <Map size={10} className="text-violet-300" />
-              <span className="text-[10px] font-medium" style={{ color: "#c4b5fd" }}>开发蓝图</span>
-            </motion.button>
+              {isAtEnd && <ArrowLeft size={10} className="text-white/50" />}
+              <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.45)" }}>
+                {isAtEnd ? "向右滑动" : "向左滑动"}
+              </span>
+              {!isAtEnd && <ArrowRight size={10} className="text-white/50" />}
+            </motion.div>
           </div>
 
           {/* 横向滚动区 - flex-1 撑满剩余高度 */}
           <div
             className="flex gap-2 overflow-x-auto flex-1 min-h-0"
             style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+            onWheel={(e) => {
+              if (e.deltaY !== 0) {
+                e.currentTarget.scrollLeft += e.deltaY;
+                e.preventDefault();
+              }
+            }}
+            onScroll={handleScroll}
           >
             {MODULE_CARDS.map((mod, i) => (
               <motion.button
@@ -265,13 +281,6 @@ export function DefaultRightPanel({ onWillAIClick, onModuleClick }: DefaultRight
           </div>
         </div>
       </motion.div>
-
-      {/* Blueprint modal */}
-      <AnimatePresence>
-        {showBlueprint && (
-          <BlueprintModal onClose={() => setShowBlueprint(false)} />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

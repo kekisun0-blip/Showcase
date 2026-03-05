@@ -1,13 +1,16 @@
 import image_da4241a2f3e1dd03ad6cad70bfe24f03f4f55566 from 'figma:asset/da4241a2f3e1dd03ad6cad70bfe24f03f4f55566.png'
 import image_884d0da43e1af3de06785479fa6a34e314b3fa97 from 'figma:asset/884d0da43e1af3de06785479fa6a34e314b3fa97.png'
 import image_76858f61b844be55a1d5cf648c4658fba082b731 from 'figma:asset/76858f61b844be55a1d5cf648c4658fba082b731.png'
+import image_new_yongdian from 'figma:asset/7d6228b42a76502054c866b2713fb1fd334d9edc.png'
+import image_new_fadian from 'figma:asset/c85507d4ef6be05215aaf742f5b9c9a9c2c6fb2c.png'
 import image_f32c4282db4bfaa6d468e347d72b58e45ce0e5f3 from 'figma:asset/f32c4282db4bfaa6d468e347d72b58e45ce0e5f3.png'
 import aiHead     from 'figma:asset/864d664a8fcb7235c7b1fc63fc4de5c9292f1deb.png';
 import aiWave     from 'figma:asset/ecd7dd39bd2d0f0ec8c8d683850b8c170e18324b.png';
 import aiTablet   from 'figma:asset/9cd38438fdc57b1afabb2e7fd386157be84b08da.png';
 import aiSuitcase from 'figma:asset/fea78b3cce09a877eeb8e2067c538a4a047b102a.png';
+import { EnergyFlowDiagram } from './EnergyFlowDiagram';
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, animate, useInView } from 'motion/react';
+import { motion, animate, useInView, AnimatePresence } from 'motion/react';
 import {
   ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceArea, AreaChart, Bar,
@@ -44,50 +47,47 @@ const C = {
   dim:    'rgba(255,255,255,0.18)',
 };
 
-// ─── Chart Data ───────────────────────────────────────────────────────────────
-const powerDayData = [
-  { t:'00:00', pv:0,   grid:0.3, bat:0,   soc:32, price:8  },
-  { t:'01:00', pv:0,   grid:0.1, bat:0,   soc:30, price:7  },
-  { t:'02:00', pv:0,   grid:0.1, bat:0,   soc:28, price:6  },
-  { t:'03:20', pv:0,   grid:0.6, bat:1.2, soc:55, price:5  },
-  { t:'04:00', pv:0,   grid:0.8, bat:1.5, soc:68, price:5  },
-  { t:'05:00', pv:0,   grid:0.3, bat:0,   soc:72, price:7  },
-  { t:'06:40', pv:0.5, grid:0,   bat:0.2, soc:74, price:9  },
-  { t:'08:00', pv:1.8, grid:0,   bat:0.8, soc:65, price:11 },
-  { t:'10:00', pv:3.2, grid:0,   bat:2.1, soc:45, price:13 },
-  { t:'11:00', pv:4.0, grid:0,   bat:2.8, soc:62, price:14 },
-  { t:'12:00', pv:4.5, grid:0,   bat:3.0, soc:78, price:15 },
-  { t:'13:10', pv:4.2, grid:0,   bat:2.5, soc:86, price:16 },
-  { t:'14:00', pv:3.5, grid:0,   bat:1.2, soc:90, price:18 },
-  { t:'15:00', pv:2.8, grid:0,   bat:0,   soc:90, price:22 },
-  { t:'16:30', pv:1.5, grid:0,   bat:0,   soc:88, price:30 },
-  { t:'17:30', pv:1.0, grid:0,   bat:0,   soc:82, price:32 },
-  { t:'18:30', pv:0.3, grid:0,   bat:0.5, soc:75, price:28 },
-  { t:'19:50', pv:0,   grid:0.2, bat:0,   soc:68, price:25 },
-  { t:'21:00', pv:0,   grid:0.4, bat:0,   soc:62, price:14 },
-  { t:'23:10', pv:0,   grid:0.5, bat:0,   soc:55, price:10 },
-];
+// ─── Scene Chart Data (冬季 + 夏季，对标参考图 7 条数据系列) ──────────────────
+// 每条数据: t=时刻, gen=实际发电kW, genP=预测发电kW, con=实际用电kW, conP=预测用电kW,
+//           s=实际SOC%, pd=计划SOC%, price=电价€/kWh
+const winterSceneData = (() => {
+  // ❄️ 冬季：发电少、早晚用电高、双充电周期（夜间低谷+午间光伏）
+  const gen   = [0, 0, 0, 0, 0, 0, 0, 0, 0.5, 1.5, 2.5, 3.0, 3.2, 2.8, 2.2, 1.5, 0.5, 0, 0, 0, 0, 0, 0, 0];
+  const genP  = [0, 0, 0, 0, 0, 0, 0, 0.2, 1.0, 2.0, 3.0, 3.5, 3.8, 3.2, 2.5, 1.8, 0.8, 0, 0, 0, 0, 0, 0, 0];
+  const con   = [2.5, 2.0, 1.8, 1.5, 1.5, 2.0, 3.5, 5.0, 5.5, 4.5, 3.5, 3.0, 3.5, 3.5, 3.0, 3.5, 4.5, 6.5, 8.0, 7.0, 5.5, 4.0, 3.0, 2.5];
+  const conP  = [3.0, 2.5, 2.0, 1.8, 1.8, 2.5, 4.0, 5.5, 6.0, 5.0, 4.0, 3.5, 4.0, 4.0, 3.5, 4.0, 5.0, 7.0, 8.5, 7.5, 6.0, 4.5, 3.5, 3.0];
+  const soc   = [40, 28, 15, 30, 65, 92, 98, 95, 85, 72, 62, 58, 62, 72, 88, 93, 85, 68, 48, 30, 18, 10, 5, 8];
+  const socP  = [35, 25, 12, 20, 55, 90, 95, 92, 82, 68, 58, 55, 60, 70, 85, 90, 80, 65, 45, 28, 15, 8, 5, 8];
+  const price = [0.06, 0.05, 0.04, 0.03, 0.03, 0.05, 0.15, 0.17, 0.16, 0.15, 0.14, 0.12, 0.10, 0.08, 0.10, 0.12, 0.15, 0.20, 0.22, 0.20, 0.15, 0.10, 0.08, 0.07];
+  return Array.from({ length: 24 }, (_, i) => ({
+    t: `${i.toString().padStart(2, '0')}:00`,
+    gen: gen[i], genP: genP[i], con: con[i], conP: conP[i],
+    s: soc[i], pd: socP[i], price: price[i],
+  }));
+})();
 
+const summerSceneData = (() => {
+  // ☀️ 夏季：发电强劲、SOC长时间100%平台、晚间急降
+  const gen   = [0, 0, 0, 0, 0, 0.5, 2.0, 5.0, 8.5, 12.0, 15.0, 17.0, 17.5, 16.5, 15.0, 12.5, 9.0, 5.5, 2.5, 0.5, 0, 0, 0, 0];
+  const genP  = [0, 0, 0, 0, 0.3, 1.0, 3.0, 6.0, 9.5, 13.0, 16.0, 18.0, 18.5, 17.5, 16.0, 13.5, 10.0, 6.5, 3.0, 1.0, 0, 0, 0, 0];
+  const con   = [1.5, 1.2, 1.0, 0.8, 0.8, 1.0, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.0, 7.5, 7.0, 6.0, 5.0, 4.0, 3.5, 3.0, 2.5, 2.0, 1.5, 1.5];
+  const conP  = [2.0, 1.5, 1.2, 1.0, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 7.5, 8.0, 7.5, 6.5, 5.5, 4.5, 4.0, 3.5, 3.0, 2.5, 2.0, 1.8];
+  const soc   = [60, 52, 45, 38, 33, 36, 48, 65, 82, 95, 100, 100, 100, 100, 100, 100, 100, 100, 88, 58, 28, 12, 8, 10];
+  const socP  = [58, 50, 42, 35, 32, 35, 45, 60, 78, 92, 100, 100, 100, 100, 100, 100, 100, 100, 85, 55, 25, 10, 8, 10];
+  const price = [0.08, 0.07, 0.06, 0.05, 0.05, 0.06, 0.08, 0.10, 0.11, 0.12, 0.12, 0.12, 0.11, 0.10, 0.11, 0.13, 0.14, 0.15, 0.16, 0.14, 0.10, 0.08, 0.07, 0.07];
+  return Array.from({ length: 24 }, (_, i) => ({
+    t: `${i.toString().padStart(2, '0')}:00`,
+    gen: gen[i], genP: genP[i], con: con[i], conP: conP[i],
+    s: soc[i], pd: socP[i], price: price[i],
+  }));
+})();
+
+// SOC data for BatterySection
 const socData = [
   { t:'00', s:30 },{ t:'02', s:28 },{ t:'04', s:25 },{ t:'06', s:28 },
   { t:'08', s:40 },{ t:'10', s:57 },{ t:'12', s:72 },{ t:'14', s:83 },
   { t:'16', s:85 },{ t:'18', s:70 },{ t:'20', s:56 },{ t:'22', s:46 },
   { t:'24', s:40 },
-];
-
-const rwData = [
-  { t:'0',  fg:0.3, fb:0,   fp:0,   pv:0,    bc:0,    s:38, pd:40 },
-  { t:'2',  fg:0.2, fb:0,   fp:0,   pv:0,    bc:0,    s:35, pd:36 },
-  { t:'4',  fg:0.3, fb:0,   fp:0,   pv:0,    bc:-1.2, s:65, pd:67 },
-  { t:'6',  fg:0.1, fb:0,   fp:0.4, pv:-0.4, bc:0,    s:70, pd:69 },
-  { t:'8',  fg:0,   fb:0,   fp:1.8, pv:-2.8, bc:-1.0, s:74, pd:76 },
-  { t:'10', fg:0,   fb:0,   fp:2.0, pv:-4.5, bc:-2.0, s:88, pd:87 },
-  { t:'12', fg:0,   fb:0,   fp:2.2, pv:-5.5, bc:-2.2, s:90, pd:90 },
-  { t:'14', fg:0,   fb:2.5, fp:2.0, pv:-4.2, bc:0,    s:82, pd:82 },
-  { t:'16', fg:0,   fb:3.5, fp:2.0, pv:-2.0, bc:0,    s:66, pd:65 },
-  { t:'18', fg:0,   fb:4.2, fp:0.4, pv:-0.2, bc:0,    s:40, pd:38 },
-  { t:'20', fg:0.5, fb:2.5, fp:0.2, pv:0,    bc:0,    s:20, pd:20 },
-  { t:'22', fg:1.0, fb:0,   fp:0,   pv:0,    bc:0,    s:16, pd:16 },
 ];
 
 // ─── Animated Counter ────────────────────────────────────────────────���────────
@@ -112,7 +112,7 @@ const ChartTip = ({ active, payload, label }: any) => {
     <div style={{ background: 'rgba(8,4,24,0.98)', border: `1px solid ${C.b1}`, borderRadius: 8, padding: '8px 12px' }}>
       <p style={{ color: C.violet, fontSize: 10, marginBottom: 4 }}>{label}</p>
       {payload.map((d: any, i: number) => (
-        <p key={i} style={{ color: d.color, fontSize: 10, margin: '2px 0' }}>{d.name}: <strong>{d.value}</strong></p>
+        <p key={`${d.dataKey}-${i}`} style={{ color: d.color, fontSize: 10, margin: '2px 0' }}>{d.name}: <strong>{d.value}</strong></p>
       ))}
     </div>
   );
@@ -218,15 +218,7 @@ function PhoneFrame({ src, title, desc, index, glow }: {
           boxShadow: `0 20px 52px rgba(0,0,0,0.65), 0 0 ${hov ? 40 : 16}px ${glow}30`,
           overflow: 'hidden', transition: 'box-shadow .3s, border-color .3s',
         }}>
-          <div style={{
-            height: 22, background: 'rgba(0,0,0,0.7)', display: 'flex',
-            alignItems: 'center', justifyContent: 'space-between', padding: '0 12px',
-            position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2,
-          }}>
-            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)' }}>9:41</span>
-            <div style={{ width: 48, height: 10, borderRadius: 5, background: '#111', border: '1.5px solid rgba(255,255,255,0.2)', margin: '0 auto' }} />
-            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.7)' }}>●●●</span>
-          </div>
+          
           <img src={src} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       </motion.div>
@@ -299,9 +291,9 @@ function HeroSection() {
   ];
 
   const steps = [
-    { c: C.amber,  l: '低谷补电', s: '03:20 — ¥5/kWh',  note: '自动从电网低价充电' },
-    { c: C.violet, l: '光伏充储', s: '10:00 — PV 4.5kW', note: '盈余电量智能存储'   },
-    { c: C.pink,   l: '高峰放电', s: '16:30 — ¥32/kWh',  note: '零取电网，自给自足' },
+    { c: C.amber,  l: '低谷充电', note: 'AI识别低谷时段，自动充电至最优SOC' },
+    { c: C.violet, l: '光伏储能', note: '光伏满发时余电全量充入电池' },
+    { c: C.pink,   l: '晚峰套利', note: '高价时段电池100%供电，最大化收益' },
   ];
 
   return (
@@ -316,10 +308,20 @@ function HeroSection() {
           position: 'absolute', inset: 0,
           background: 'linear-gradient(to bottom,rgba(8,5,28,0.6) 0%,rgba(8,5,28,0.4) 40%,rgba(8,5,28,0.96) 82%,#08051c 100%)',
         }} />
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.18,
-          backgroundImage: 'linear-gradient(rgba(139,92,246,0.12) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.12) 1px,transparent 1px)',
-          backgroundSize: '64px 64px',
+                <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: `
+            radial-gradient(circle at 50% 40%, rgba(139,92,246,0.15) 0%, transparent 70%),
+            linear-gradient(to right, rgba(139,92,246,0.08) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(139,92,246,0.08) 1px, transparent 1px),
+            linear-gradient(to right, rgba(139,92,246,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(139,92,246,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '100% 100%, 80px 80px, 80px 80px, 20px 20px, 20px 20px',
+          maskImage: 'radial-gradient(circle at 50% 40%, black 20%, transparent 85%)',
+          WebkitMaskImage: 'radial-gradient(circle at 50% 40%, black 20%, transparent 85%)',
+          opacity: 0.4,
+          pointerEvents: 'none',
         }} />
       </div>
 
@@ -347,7 +349,7 @@ function HeroSection() {
           
 
           {/* Headline row: mascot + title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, marginLeft: -50 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, marginLeft: 10 }}>
             <motion.img
               src={aiWave}
               alt="爱小惟"
@@ -390,37 +392,37 @@ function HeroSection() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .42, duration: .7 }}
             style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 36 }}>
             {[
-              { v: 200, s: '万+', l: '在网设备',     c: C.blue   },
-              { v: 5,   s: '亿+', l: '历史学习数据', c: C.violet },
-              { v: 365, s: '天',  l: '持续学习进化', c: C.cyan   },
+              { v: 200, s: '万+', l: '在网设备',     c: C.blue, id: 'hero-dev' },
+              { v: 5,   s: '亿+', l: '历史学习数据', c: C.violet, id: 'hero-data' },
+              { v: 365, s: '天',  l: '持续学习进化', c: C.cyan, id: 'hero-evolve' },
             ].map(m => (
-              <div key={m.l} style={{ textAlign: 'left' }}>
+              <div key={m.id} style={{ textAlign: 'left' }}>
                 <p style={{ fontSize: 'clamp(24px,3.5vw,44px)', fontWeight: 800, color: m.c, lineHeight: 1 }}>
-                  <Cnt target={m.v} suf={m.s} />
+                  <span style={{ display: 'inline-block', transform: 'translateX(100px)' }}><Cnt target={m.v} suf={m.s} /></span>
                 </p>
-                <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{m.l}</p>
+                <p style={{ fontSize: 12, color: C.muted, marginTop: 4, transform: 'translateX(100px)' }}>{m.l}</p>
               </div>
             ))}
           </motion.div>
 
           {/* AI scenario pills */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .58 }}
-            style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            style={{ display: 'flex', gap: 10, flexWrap: 'nowrap' }}>
             {steps.map((s, i) => (
-              <motion.div key={s.l}
+                            <motion.div key={s.l}
                 animate={{ opacity: aiStep === i ? 1 : 0.35, scale: aiStep === i ? 1.04 : 1 }}
                 transition={{ duration: .3 }}
                 style={{
-                  padding: '10px 16px', borderRadius: 13, textAlign: 'left',
-                  marginLeft: 20,
+                  flex: '1 0 180px',
+                  padding: '12px', borderRadius: 14, textAlign: 'left',
                   background: aiStep === i ? `${s.c}18` : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${aiStep === i ? s.c + '60' : 'rgba(255,255,255,0.08)'}`,
-                  boxShadow: aiStep === i ? `0 0 20px ${s.c}22` : 'none',
+                  boxShadow: aiStep === i ? `0 10px 30px -10px ${s.c}40` : 'none',
                   transition: 'border-color .3s, background .3s, box-shadow .3s',
+                  transform: 'translateX(-180px)',
                 }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: s.c, marginBottom: 2 }}>{s.l}</p>
-                <p style={{ fontSize: 10, color: C.muted }}>{s.s}</p>
-                <p style={{ fontSize: 10, color: '#fff', marginTop: 2 }}>{s.note}</p>
+                                <p style={{ fontSize: 10, color: '#fff', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.note}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -492,9 +494,9 @@ function AIWorkflowSection() {
   ];
 
   const scenarios = [
-    { c: C.green,  time: '03:20', label: '🌙 低谷自动补充', desc: 'AI识别低谷（¥5/kWh），提前充电至最优容量' },
-    { c: C.amber,  time: '10:00–13:10', label: '☀️ 光伏优先储能', desc: 'PV峰值 4.5kW，多余电量全数存入电池备用' },
-    { c: C.pink,   time: '16:30–19:50', label: '⚡ 高峰零取电网', desc: '电价达¥32/kWh，100% 由电池供电完全避峰' },
+    { c: C.green,  time: '02:00–05:00', label: '🌙 低谷自动充电', desc: 'AI识别DK1夜间低谷电价（0.03 EUR/kWh），自动充电至最优SOC' },
+    { c: C.amber,  time: '10:00–14:00', label: '☀️ 光伏高发储能', desc: '屋顶光伏满发，现货价降至0.005 EUR/kWh，余电全量充入电池' },
+    { c: C.pink,   time: '17:00–20:00', label: '⚡ 晚峰放电套利', desc: '电价飙至0.15 EUR/kWh，电池100%供电，峰谷价差8.2×' },
   ];
 
   return (
@@ -578,139 +580,458 @@ function AIWorkflowSection() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION 4 — POWER CHART + REAL DATA
-// ═══════════════════════════════════════════════════════════════════════════════
+// SECTION 4 — POWER CHART + REAL DATA (冬季 + 夏季 双场景图)
+// ═════════════���═════════════════════════════════════════════════════════════════
+
+// 场景图专用 Tooltip
+const SceneChartTip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: 'rgba(8,5,28,0.97)', border: '1px solid rgba(139,92,246,0.25)',
+      borderRadius: 12, padding: '12px 16px', minWidth: 180,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(139,92,246,0.08)',
+      backdropFilter: 'blur(12px)',
+    }}>
+      <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 700, marginBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 6 }}>{label}</p>
+      {payload.map((d: any, i: number) => {
+        const isPrice = d.dataKey === 'priceScaled';
+        const val = isPrice ? (d.value / 400).toFixed(3) : d.value;
+        const unit = isPrice ? ' €/kWh' : d.dataKey === 's' || d.dataKey === 'pd' ? '%' : ' kW';
+        const name = isPrice ? '电价' : d.name;
+        return (
+          <div key={`${d.dataKey}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 20, margin: '4px 0' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, display: 'inline-block', boxShadow: `0 0 6px ${d.color}60` }} />
+              {name}
+            </span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: d.color }}>{val}{unit}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// 7 系列图例数据（含 dataKey 映射）
+const LEGEND_ITEMS = [
+  { type: 'line' as const,      c: '#60a5fa', l: '计划SOC (%)',  dk: 'pd' },
+  { type: 'dot-line' as const,  c: '#f87171', l: '实际SOC (%)',  dk: 's' },
+  { type: 'dash' as const,      c: '#fbbf24', l: '电价 (€/kWh)', dk: 'priceScaled' },
+  { type: 'bar' as const,       c: '#34d399', l: '预测发电',      dk: 'genP' },
+  { type: 'bar-solid' as const, c: '#059669', l: '实际发电',      dk: 'gen' },
+  { type: 'bar' as const,       c: '#94a3b8', l: '预测用电',      dk: 'conP' },
+  { type: 'bar-solid' as const, c: '#818cf8', l: '实际用电',      dk: 'con' },
+];
+
+// 7 系列图例组件（点击切换图表中对应系列显隐）
+function SceneChartLegend({ hiddenSeries, onToggle }: {
+  hiddenSeries: Set<string>;
+  onToggle: (dk: string) => void;
+}) {
+  const allHidden = hiddenSeries.size > 0;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', marginBottom: 16, padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
+      {LEGEND_ITEMS.map(it => {
+        const isHidden = hiddenSeries.has(it.dk);
+        return (
+          <motion.div
+            key={it.l}
+            onClick={() => onToggle(it.dk)}
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.94 }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              cursor: 'pointer', padding: '3px 8px', borderRadius: 8,
+              opacity: isHidden ? 0.3 : 1,
+              transition: 'opacity 0.25s',
+              userSelect: 'none' as const,
+            }}
+          >
+            {it.type === 'line' ? (
+              <div style={{ width: 16, height: 2, borderRadius: 1, background: it.c, boxShadow: `0 0 4px ${it.c}50` }} />
+            ) : it.type === 'dot-line' ? (
+              <div style={{ position: 'relative', width: 16, height: 10, display: 'flex', alignItems: 'center' }}>
+                <div style={{ width: 16, height: 2, borderRadius: 1, background: it.c }} />
+                <div style={{ position: 'absolute', left: 5, top: 2, width: 6, height: 6, borderRadius: '50%', background: it.c, border: '1.5px solid rgba(8,5,28,0.8)' }} />
+              </div>
+            ) : it.type === 'dash' ? (
+              <div style={{ width: 16, height: 0, borderTop: `2px dashed ${it.c}` }} />
+            ) : it.type === 'bar-solid' ? (
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: it.c }} />
+            ) : (
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: `${it.c}30`, border: `1.5px solid ${it.c}60` }} />
+            )}
+            <span style={{
+              fontSize: 10,
+              color: isHidden ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.65)',
+              textDecoration: isHidden ? 'line-through' : 'none',
+              transition: 'color 0.2s',
+            }}>{it.l}</span>
+          </motion.div>
+        );
+      })}
+      {/* 全部显示 */}
+      {allHidden && (
+        <motion.div
+          initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }}
+          onClick={() => { const copy = new Set<string>(); LEGEND_ITEMS.forEach(it => { if (hiddenSeries.has(it.dk)) onToggle(it.dk); }); }}
+          style={{ marginLeft: 6, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '3px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+        >
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>全部显示</span>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+// 单个场景图
+function SceneChart({ data, prefix, hiddenSeries }: { data: any[]; prefix: string; hiddenSeries: Set<string> }) {
+  const chartData = data.map(d => ({ ...d, priceScaled: d.price * 400 }));
+
+  return (
+    <ResponsiveContainer width="100%" height={320}>
+      <ComposedChart data={chartData} margin={{ top: 10, right: 20, left: -4, bottom: 4 }}
+        barGap={1} barCategoryGap="20%">
+        <defs key="defs">
+          <linearGradient id={`${prefix}-socFill`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#60a5fa" stopOpacity={0.15} />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.01} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid key="grid" strokeDasharray="3 6" stroke="rgba(255,255,255,0.04)" vertical={false} />
+        <XAxis key="x-axis" dataKey="t" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 9 }}
+          axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
+          tickLine={false} interval={2} />
+
+        {/* Left Y: SOC 0–100% */}
+        <YAxis key="y-axis-l" yAxisId="L" domain={[0, 100]}
+          ticks={[0, 20, 40, 60, 80, 100]}
+          tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 9 }}
+          axisLine={{ stroke: 'rgba(255,255,255,0.06)' }} tickLine={false}
+          tickFormatter={(v: number) => `${v}%`} />
+
+        {/* Right Y: kW 0–20 */}
+        <YAxis key="y-axis-r" yAxisId="R" orientation="right" domain={[0, 20]}
+          ticks={[0, 5, 10, 15, 20]}
+          tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 9 }}
+          axisLine={{ stroke: 'rgba(255,255,255,0.06)' }} tickLine={false}
+          tickFormatter={(v: number) => `${v}kW`} />
+
+        <Tooltip key="tooltip" content={<SceneChartTip />} />
+
+        {/* ── 柱状图：预测用电 ── */}
+        <Bar key="conP" yAxisId="R" dataKey="conP" name="预测用电"
+          fill="#94a3b8" fillOpacity={0.25} radius={[2, 2, 0, 0] as any}
+          hide={hiddenSeries.has('conP')} />
+        {/* ── 柱状图：实际用电 ── */}
+        <Bar key="con" yAxisId="R" dataKey="con" name="实际用电"
+          fill="#818cf8" fillOpacity={0.75} radius={[2, 2, 0, 0] as any}
+          hide={hiddenSeries.has('con')} />
+        {/* ── 柱状图：预测发电 ── */}
+        <Bar key="genP" yAxisId="R" dataKey="genP" name="预测发电"
+          fill="#34d399" fillOpacity={0.25} radius={[2, 2, 0, 0] as any}
+          hide={hiddenSeries.has('genP')} />
+        {/* ── 柱状图：实际发电 ── */}
+        <Bar key="gen" yAxisId="R" dataKey="gen" name="实际发电"
+          fill="#059669" fillOpacity={0.85} radius={[2, 2, 0, 0] as any}
+          hide={hiddenSeries.has('gen')} />
+
+        {/* ── 计划SOC ── */}
+        <Area key="pd" yAxisId="L" type="monotone" dataKey="pd" name="计划SOC"
+          stroke="#60a5fa" strokeWidth={2} fill={`url(#${prefix}-socFill)`}
+          dot={false} hide={hiddenSeries.has('pd')} />
+        {/* ── 实际SOC ── */}
+        <Line key="soc" yAxisId="L" type="monotone" dataKey="s" name="实际SOC"
+          stroke="#f87171" strokeWidth={2}
+          dot={{ r: 2.5, fill: '#f87171', strokeWidth: 1.5, stroke: 'rgba(8,5,28,0.6)' }}
+          hide={hiddenSeries.has('s')} />
+        {/* ── 电价 ── */}
+        <Line key="price" yAxisId="L" type="stepAfter" dataKey="priceScaled" name="电价"
+          stroke="#fbbf24" strokeWidth={1.5} strokeDasharray="6 4" dot={false}
+          hide={hiddenSeries.has('priceScaled')} />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+}
+
 function PowerDataSection() {
+  const [winterHidden, setWinterHidden] = useState<Set<string>>(new Set());
+  const [summerHidden, setSummerHidden] = useState<Set<string>>(new Set());
+
+  const toggleWinter = (dk: string) =>
+    setWinterHidden(prev => { const s = new Set(prev); s.has(dk) ? s.delete(dk) : s.add(dk); return s; });
+  const toggleSummer = (dk: string) =>
+    setSummerHidden(prev => { const s = new Set(prev); s.has(dk) ? s.delete(dk) : s.add(dk); return s; });
+
   return (
     <section style={{ padding: '60px 24px', background: C.bg }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <SecHead badge="POWER DATA" title="每一度电，精打细算"
-          sub="AI 5曲线联合决策，24小时智能调度，最大化储能收益" />
+          sub="AI 7维数据联合决策，冬夏双场景对比，24小时智能调度" />
 
-        {/* Day chart */}
+        {/* ── Chart 1: 冬季场景 ── */}
         <FadeIn>
           <div style={{
-            background: C.card, border: `1px solid ${C.b1}`, borderRadius: 20,
-            padding: '24px', backdropFilter: 'blur(14px)', marginBottom: 20,
+            background: 'rgba(12,8,32,0.88)', border: '1px solid rgba(96,165,250,0.15)', borderRadius: 20,
+            padding: '28px 24px', backdropFilter: 'blur(16px)', marginBottom: 28,
+            boxShadow: '0 4px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 16px', marginBottom: 16 }}>
-              {[
-                { c: C.amber,  fill: true,  l: 'PV 发电 (kW)' },
-                { c: C.pink,   fill: true,  l: '电网补充 (kW)' },
-                { c: C.cyan,   fill: true,  l: '电池充电 (kW)' },
-                { c: '#22d3ee',fill: false, dash: true, l: '电价 (¢/kWh)' },
-              ].map(g => (
-                <div key={g.l} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{
-                    width: 18, height: 2.5,
-                    background: g.fill ? `${g.c}cc` : 'transparent',
-                    borderTop: !g.fill ? `2px ${(g as any).dash ? 'dashed' : 'solid'} ${g.c}` : 'none',
-                    borderRadius: 1,
-                  }} />
-                  <span style={{ fontSize: 11, color: C.muted }}>{g.l}</span>
-                </div>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>❄️</span> 冬季场景
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 14px',
+                borderRadius: 20, background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
+                <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.8, repeat: Infinity }}
+                  style={{ width: 6, height: 6, borderRadius: '50%', background: '#60a5fa', boxShadow: '0 0 8px #60a5fa60' }} />
+                <span style={{ fontSize: 10, color: '#60a5fa', fontWeight: 600 }}>标准场景 · 冬季</span>
+              </div>
             </div>
-            <ResponsiveContainer width="100%" height={230}>
-              <ComposedChart data={powerDayData} margin={{ top: 4, right: 36, left: -18, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="ep-gPV" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.amber} stopOpacity={0.55} />
-                    <stop offset="95%" stopColor={C.amber} stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="ep-gGrid" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.pink}  stopOpacity={0.5} />
-                    <stop offset="95%" stopColor={C.pink}  stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="ep-gBat" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.cyan}  stopOpacity={0.4} />
-                    <stop offset="95%" stopColor={C.cyan}  stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.08)" />
-                <XAxis dataKey="t" tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} interval={3} />
-                <YAxis yAxisId="L" domain={[0,6]} tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="R" orientation="right" domain={[0,100]} tick={{ fill: C.muted, fontSize: 9 }}
-                  axisLine={false} tickLine={false} tickFormatter={v=>`${v}%`} />
-                <Tooltip content={<ChartTip />} />
-                <ReferenceArea yAxisId="L" x1="02:00" x2="05:00" fill="rgba(16,185,129,0.07)"  stroke="rgba(16,185,129,0.25)"  strokeWidth={1} />
-                <ReferenceArea yAxisId="L" x1="10:00" x2="14:00" fill="rgba(139,92,246,0.07)"  stroke="rgba(139,92,246,0.25)"  strokeWidth={1} />
-                <ReferenceArea yAxisId="L" x1="16:30" x2="19:50" fill="rgba(244,114,182,0.07)" stroke="rgba(244,114,182,0.28)" strokeWidth={1} />
-                <Area yAxisId="L" type="monotone" dataKey="pv"   name="PV发电"  stroke={C.amber} strokeWidth={2}   fill="url(#ep-gPV)"   dot={false} />
-                <Area yAxisId="L" type="monotone" dataKey="grid" name="电网补充" stroke={C.pink}  strokeWidth={1.5} fill="url(#ep-gGrid)" dot={false} />
-                <Area yAxisId="L" type="monotone" dataKey="bat"  name="电池充电" stroke={C.cyan}  strokeWidth={1.5} fill="url(#ep-gBat)"  dot={false} />
-                <Line  yAxisId="R" type="monotone" dataKey="soc"   name="SoC%"  stroke="#f97316" strokeWidth={2}   dot={false} />
-                <Line  yAxisId="R" type="monotone" dataKey="price" name="电价"   stroke="#22d3ee" strokeWidth={1.5} strokeDasharray="5 3" dot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 14, flexWrap: 'wrap' }}>
+            <SceneChartLegend hiddenSeries={winterHidden} onToggle={toggleWinter} />
+            <SceneChart data={winterSceneData} prefix="winter" hiddenSeries={winterHidden} />
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16, flexWrap: 'wrap' }}>
               {[
-                { l: '🌙 低谷补电',  sub: '03:20–05:00 · 电价低谷自动充电', c: '#10b981' },
-                { l: '☀️ 光伏充储',  sub: '10:00–13:10 · PV高峰优先自充',  c: C.amber  },
-                { l: '⚡ 高峰零取电', sub: '16:30–19:50 · 电池放电避高价',  c: C.pink   },
+                { l: '🌙 夜间低谷充电',  sub: '02:00–05:00 · €0.03/kWh', c: '#60a5fa' },
+                { l: '☀️ 午间光伏补充',  sub: '09:00–15:00 · 发电≤3.2kW', c: '#34d399' },
+                { l: '⚡ 晚峰电池放电',  sub: '17:00–20:00 · €0.20–0.22',  c: '#f87171' },
               ].map(a => (
-                <div key={a.l} style={{
-                  textAlign: 'center', padding: '8px 16px', borderRadius: 9,
-                  background: `${a.c}0a`, border: `1px solid ${a.c}28`,
-                }}>
+                <div key={a.l} style={{ textAlign: 'center', padding: '10px 18px', borderRadius: 12, background: `${a.c}08`, border: `1px solid ${a.c}20` }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: a.c }}>{a.l}</p>
-                  <p style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{a.sub}</p>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>{a.sub}</p>
                 </div>
               ))}
             </div>
           </div>
         </FadeIn>
 
-        {/* Real World Results */}
-        <FadeIn delay={0.1}>
+        {/* ── Chart 2: 夏季场景 ── */}
+        <FadeIn delay={0.15}>
           <div style={{
-            background: C.card, border: `1px solid ${C.b1}`, borderRadius: 20,
-            padding: '24px', backdropFilter: 'blur(14px)',
+            background: 'rgba(12,8,32,0.88)', border: '1px solid rgba(52,211,153,0.15)', borderRadius: 20,
+            padding: '28px 24px', backdropFilter: 'blur(16px)',
+            boxShadow: '0 4px 40px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>真实设备数据 · 德国用户全天能源流向</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px',
-                borderRadius: 7, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>☀️</span> 夏季场景
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 14px',
+                borderRadius: 20, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
                 <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.8, repeat: Infinity }}
-                  style={{ width: 6, height: 6, borderRadius: '50%', background: C.green }} />
-                <span style={{ fontSize: 10, color: C.green, fontWeight: 600 }}>LM008K · 4kWh · 2024-06-03</span>
+                  style={{ width: 6, height: 6, borderRadius: '50%', background: '#34d399', boxShadow: '0 0 8px #34d39960' }} />
+                <span style={{ fontSize: 10, color: '#34d399', fontWeight: 600 }}>标准场景 · 夏季</span>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={rwData} margin={{ top: 4, right: 44, left: -14, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="ep-gRWPV" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#10b981" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.06} />
-                  </linearGradient>
-                  <linearGradient id="ep-gRWBC" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor={C.blue} stopOpacity={0.45} />
-                    <stop offset="95%" stopColor={C.blue} stopOpacity={0.06} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.08)" />
-                <XAxis dataKey="t" tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="L" domain={[-6, 7]} tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false}
-                  tickFormatter={v => v === 0 ? '0' : `${Math.abs(v)}kW`} />
-                <YAxis yAxisId="R" orientation="right" domain={[0, 100]} tick={{ fill: C.muted, fontSize: 9 }}
-                  axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-                <Tooltip content={<ChartTip />} />
-                <Area yAxisId="L" type="monotone" dataKey="pv" name="PV发电" baseValue={0}
-                  stroke="#10b981" strokeWidth={2} fill="url(#ep-gRWPV)" dot={false} />
-                <Area yAxisId="L" type="monotone" dataKey="bc" name="电池充电" baseValue={0}
-                  stroke={C.blue} strokeWidth={1.5} fill="url(#ep-gRWBC)" dot={false} />
-                <Bar yAxisId="L" dataKey="fg" stackId="up" name="电网供电" fill={C.amber}  opacity={0.88} maxBarSize={14} />
-                <Bar yAxisId="L" dataKey="fb" stackId="up" name="电池放电" fill={C.blue} opacity={0.88} maxBarSize={14} />
-                <Bar yAxisId="L" dataKey="fp" stackId="up" name="PV供电"  fill={C.green} opacity={0.88} maxBarSize={14} />
-                <Line yAxisId="R" type="monotone" dataKey="s"  name="实测SOC" stroke="rgba(226,232,240,0.9)" strokeWidth={2}
-                  dot={{ r: 2, fill: '#e2e8f0', strokeWidth: 0 }} />
-                <Line yAxisId="R" type="monotone" dataKey="pd" name="预测SOC" stroke={C.violet} strokeWidth={2} strokeDasharray="5 3" dot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
+            <SceneChartLegend hiddenSeries={summerHidden} onToggle={toggleSummer} />
+            <SceneChart data={summerSceneData} prefix="summer" hiddenSeries={summerHidden} />
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginTop: 16, flexWrap: 'wrap' }}>
+              {[
+                { l: '☀️ 强劲光伏发电', sub: '06:00–19:00 · 峰值17.5kW', c: '#34d399' },
+                { l: '🔋 SOC 100%平台', sub: '10:00–17:00 · 长时满充',   c: '#60a5fa' },
+                { l: '⚡ 晚间急速放电', sub: '18:00–21:00 · €0.14–0.16', c: '#f87171' },
+              ].map(a => (
+                <div key={a.l} style={{ textAlign: 'center', padding: '10px 18px', borderRadius: 12, background: `${a.c}08`, border: `1px solid ${a.c}20` }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: a.c }}>{a.l}</p>
+                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 3 }}>{a.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </FadeIn>
       </div>
     </section>
+  );
+}
+
+// ─── App Phone Tabs (interactive left-right layout) ──────────────────────────
+const phoneTabs = [
+  { src: appImg2, glow: C.violet, label: '实时能量流向',
+    tag: 'LIVE', desc: '10秒刷新：PV发电、电池SOC、用电负载一览无余',
+    detail: ['光伏实时输出监控', '电池SOC精准显示', '用电负载即时追踪'] },
+  { src: appImg1, glow: C.cyan,   label: 'AI 充放电策略',
+    tag: 'AI', desc: '5种充放电模式一键切换，AI Smart模式全自动优化',
+    detail: ['峰谷套利自动执行', '5种模式灵活切换', 'AI预测充放时机'] },
+  { src: appImg3, glow: C.amber,  label: '发电量统计',
+    tag: 'STATS', desc: '日/周/月/年多维分析，掌握每度电的去向与收益',
+    detail: ['多时段对比分析', '收益可视化报表', '一键导出数据'] },
+];
+
+function AppPhoneTabs() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const tab = phoneTabs[active];
+
+  useEffect(() => {
+    if (paused) return;
+    const id = setInterval(() => {
+      setActive(prev => (prev + 1) % phoneTabs.length);
+    }, 3000);
+    return () => clearInterval(id);
+  }, [paused]);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center', marginBottom: 36 }}>
+      {/* ── Left: tab list ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {phoneTabs.map((t, i) => {
+          const isActive = i === active;
+          return (
+            <motion.button key={t.label} onClick={() => { setActive(i); setPaused(true); }}
+              whileHover={{ x: isActive ? 0 : 4 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 18px',
+                borderRadius: 16, cursor: 'pointer', textAlign: 'left', border: 'none',
+                background: isActive ? `${t.glow}14` : 'rgba(255,255,255,0.03)',
+                outline: isActive ? `1.5px solid ${t.glow}55` : '1px solid rgba(255,255,255,0.06)',
+                transition: 'background .25s, outline .25s' }}>
+              <div style={{ width: 64, height: 32, borderRadius: 9, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: isActive ? `${t.glow}28` : 'rgba(255,255,255,0.06)',
+                border: `1px solid ${isActive ? t.glow + '60' : 'rgba(255,255,255,0.08)'}`,
+                transition: 'background .25s, border .25s' }}>
+                <span style={{ fontSize: 10, fontWeight: 800,
+                  color: isActive ? t.glow : 'rgba(255,255,255,0.35)', letterSpacing: 0.5 }}>{t.tag}</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, fontWeight: 700,
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.55)', marginBottom: 4, transition: 'color .25s' }}>{t.label}</p>
+                <p style={{ fontSize: 11, color: isActive ? 'rgba(255,255,255,0.60)' : 'rgba(255,255,255,0.30)',
+                  lineHeight: 1.55, transition: 'color .25s', margin: 0 }}>{t.desc}</p>
+                {isActive && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.25 }}
+                    style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {t.detail.map(d => (
+                      <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: t.glow, flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, color: t.glow, fontWeight: 600 }}>{d}</span>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
+              {isActive && (
+                <div style={{ alignSelf: 'center', color: t.glow, fontSize: 14, opacity: 0.7 }}>›</div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      {/* ── Right: phone mockup ── */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center',
+        background: `radial-gradient(ellipse at 50% 60%, ${tab.glow}1a 0%, transparent 65%)`,
+        borderRadius: 24, padding: '32px 0', minHeight: 400, position: 'relative', overflow: 'visible' }}>
+
+        {/* Animated orbit rings */}
+        {[0, 1, 2].map(i => (
+          <motion.div key={`ring-${i}`}
+            animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
+            transition={{ duration: 12 + i * 6, repeat: Infinity, ease: 'linear' }}
+            style={{ position: 'absolute', width: 220 + i * 80, height: 220 + i * 80,
+              border: `1px solid ${tab.glow}${i === 0 ? '18' : '0c'}`,
+              borderRadius: '50%', pointerEvents: 'none',
+              top: '50%', left: '50%', marginTop: -(220 + i * 80) / 2, marginLeft: -(220 + i * 80) / 2 }}>
+            <motion.div style={{ position: 'absolute', top: -3, left: '50%',
+              width: 6, height: 6, borderRadius: '50%',
+              background: tab.glow, opacity: 0.4 - i * 0.1,
+              boxShadow: `0 0 8px ${tab.glow}60` }} />
+          </motion.div>
+        ))}
+
+        {/* Main phone with 3D perspective */}
+        <motion.div key={active}
+          initial={{ opacity: 0, rotateY: -12, scale: 0.88 }}
+          animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+          transition={{ duration: 0.5, type: 'spring', stiffness: 200, damping: 24 }}
+          style={{ position: 'relative', zIndex: 2 }}>
+
+          {/* Outer glow */}
+          <div style={{ position: 'absolute', inset: -32, borderRadius: 60,
+            background: `radial-gradient(ellipse, ${tab.glow}20 0%, transparent 70%)`,
+            pointerEvents: 'none', filter: 'blur(8px)' }} />
+
+          {/* Phone body with hover tilt */}
+          <motion.div
+            whileHover={{ rotateY: -6, rotateX: 4, scale: 1.03 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            style={{ width: 178, height: 360, borderRadius: 24, overflow: 'hidden',
+              border: `2px solid ${tab.glow}55`,
+              boxShadow: `0 28px 72px rgba(0,0,0,0.75), 0 0 56px ${tab.glow}25, inset 0 1px 0 rgba(255,255,255,0.08)`,
+              background: '#000', position: 'relative' }}>
+
+            {/* Status bar with Dynamic Island */}
+            <div style={{ height: 28, background: 'rgba(0,0,0,0.92)',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 14px',
+              position: 'relative', zIndex: 3 }}>
+              <span style={{ fontSize: 9, color: '#fff', fontWeight: 700, opacity: 0.9 }}>9:41</span>
+              <div style={{ position: 'absolute', top: 6, left: '50%', transform: 'translateX(-50%)',
+                width: 52, height: 14, borderRadius: 10, background: '#000',
+                boxShadow: '0 0 0 1px rgba(255,255,255,0.06)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <div style={{ width: 12, height: 7, border: '1px solid rgba(255,255,255,0.5)',
+                  borderRadius: 2, position: 'relative', display: 'flex', alignItems: 'center', padding: '0 1px' }}>
+                  <motion.div animate={{ width: ['40%', '85%', '40%'] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                    style={{ height: '70%', background: '#4ade80', borderRadius: 1 }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Screen content */}
+            <img src={tab.src} alt={tab.label}
+              style={{ width: '100%', height: 'calc(100% - 28px)', objectFit: 'cover', display: 'block' }} />
+
+            {/* Screen shine sweep */}
+            <motion.div
+              animate={{ x: [-200, 300], opacity: [0, 0.15, 0] }}
+              transition={{ duration: 2.5, delay: 0.3, repeat: Infinity, repeatDelay: 6 }}
+              style={{ position: 'absolute', top: 0, left: 0, width: 60, height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)',
+                transform: 'skewX(-15deg)', pointerEvents: 'none', zIndex: 4 }} />
+
+            {/* Home indicator */}
+            <div style={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)',
+              width: 48, height: 4, borderRadius: 3, background: 'rgba(255,255,255,0.2)', zIndex: 5 }} />
+          </motion.div>
+
+          {/* Floating notification badge — right */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0, y: [-10, -16, -10] }}
+            transition={{ opacity: { delay: 0.4, duration: 0.3 }, y: { duration: 3, repeat: Infinity, ease: 'easeInOut' } }}
+            style={{ position: 'absolute', top: 50, right: -60, zIndex: 5,
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+              border: `1px solid ${tab.glow}40`, borderRadius: 12, padding: '6px 12px',
+              display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: tab.glow,
+              boxShadow: `0 0 6px ${tab.glow}` }} />
+            <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{tab.tag}</span>
+          </motion.div>
+
+          {/* Floating badge — left */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0, y: [10, 4, 10] }}
+            transition={{ opacity: { delay: 0.6, duration: 0.3 }, y: { duration: 3.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 } }}
+            style={{ position: 'absolute', bottom: 100, left: -56, zIndex: 5,
+              background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '5px 10px' }}>
+            <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.6)' }}>⚡ 实时同步中</span>
+          </motion.div>
+
+          {/* Reflection below phone */}
+          <div style={{ width: 178, height: 50, marginTop: 2, borderRadius: '0 0 36px 36px',
+            overflow: 'hidden', opacity: 0.12, transform: 'scaleY(-1)', pointerEvents: 'none',
+            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)' }}>
+            <img src={tab.src} alt="" style={{ width: '100%', height: 50, objectFit: 'cover', display: 'block',
+              filter: 'blur(2px) brightness(0.6)' }} />
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -725,39 +1046,46 @@ function AppShowcaseSection() {
           sub="功能完整的 App，让复杂的能源管理一目了然"
           mascot={aiTablet} mascotSize={90} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 28, justifyItems: 'center', marginBottom: 36 }}>
-          <PhoneFrame src={appImg2} title="实时能量流向" index={0} glow={C.violet}
-            desc="10秒刷新：PV发电、电池SOC、用电负载一览无余" />
-          <PhoneFrame src={appImg1} title="AI 充放电策略" index={1} glow={C.cyan}
-            desc="5种充放电模式一键切换，AI Smart模式全自动优化" />
-          <PhoneFrame src={appImg3} title="发电量统计" index={2} glow={C.amber}
-            desc="日/周/月/年多维分析，掌握每度电的去向与收益" />
-        </div>
+        <AppPhoneTabs />
 
         <FadeIn delay={0.1}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 200px', gap: 22, alignItems: 'stretch' }}>
+            {/* 用电情况 — 宽屏景观图 */}
             <motion.div whileHover={{ y: -4, scale: 1.01 }} transition={{ type: 'spring', stiffness: 300 }}
-              style={{ borderRadius: 16, overflow: 'hidden', position: 'relative',
-                boxShadow: `0 8px 36px rgba(139,92,246,0.25), 0 0 0 1px rgba(139,92,246,0.18)` }}>
-              <img src={image_da4241a2f3e1dd03ad6cad70bfe24f03f4f55566} alt="用电情况" style={{ width: '100%', display: 'block', borderRadius: 16 }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 12px',
-                background: 'linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%)', borderRadius: '0 0 16px 16px' }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>🌙 夜间储能模式 · 电池65%</span>
+              style={{ borderRadius: 14, overflow: 'hidden', position: 'relative', height: 156,
+                boxShadow: `0 8px 36px rgba(139,92,246,0.28), 0 0 0 1px rgba(139,92,246,0.20)` }}>
+              <img src={image_new_yongdian} alt="用电情况"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,rgba(139,92,246,0.10) 0%,transparent 55%)' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 11px',
+                background: 'linear-gradient(to top,rgba(10,5,30,0.82) 0%,transparent 100%)' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: '#fff' }}>🌙 夜间储能模式 · 电池65%</span>
               </div>
             </motion.div>
+            {/* 发电情况 — 宽屏景观图 */}
             <motion.div whileHover={{ y: -4, scale: 1.01 }} transition={{ type: 'spring', stiffness: 300 }}
-              style={{ borderRadius: 16, overflow: 'hidden', position: 'relative',
-                boxShadow: `0 8px 36px rgba(16,185,129,0.2), 0 0 0 1px rgba(16,185,129,0.18)` }}>
-              <img src={image_76858f61b844be55a1d5cf648c4658fba082b731} alt="发电情况" style={{ width: '100%', display: 'block', borderRadius: 16 }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 12px',
-                background: 'linear-gradient(to top,rgba(0,0,0,0.65) 0%,transparent 100%)', borderRadius: '0 0 16px 16px' }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#fff' }}>☀️ 实时发电 15 kW · 光伏峰值</span>
+              style={{ borderRadius: 14, overflow: 'hidden', position: 'relative', height: 156,
+                boxShadow: `0 8px 36px rgba(16,185,129,0.22), 0 0 0 1px rgba(16,185,129,0.20)` }}>
+              <img src={image_new_fadian} alt="发电情况"
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg,rgba(16,185,129,0.10) 0%,transparent 55%)' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 11px',
+                background: 'linear-gradient(to top,rgba(5,20,15,0.80) 0%,transparent 100%)' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: '#fff' }}>☀️ 实时发电 15 kW · 光伏峰值</span>
               </div>
             </motion.div>
+            {/* 动态电价 — 竖屏截图，居中展示 */}
             <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}
-              style={{ width: 150, borderRadius: 22, overflow: 'hidden', flexShrink: 0,
-                boxShadow: `0 8px 36px rgba(245,158,11,0.22), 0 0 0 1px rgba(245,158,11,0.18)` }}>
-              <img src={image_884d0da43e1af3de06785479fa6a34e314b3fa97} alt="动态电价" style={{ width: '100%', display: 'block' }} />
+              style={{ borderRadius: 14, overflow: 'hidden', position: 'relative', height: 156,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.18)',
+                boxShadow: `0 8px 36px rgba(245,158,11,0.18)` }}>
+              <img src={image_884d0da43e1af3de06785479fa6a34e314b3fa97} alt="动态电价"
+                style={{ height: '100%', width: 'auto', display: 'block', objectFit: 'contain' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 11px',
+                background: 'linear-gradient(to top,rgba(20,12,5,0.80) 0%,transparent 100%)' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: '#f59e0b' }}>⚡ 动态电价</span>
+              </div>
             </motion.div>
           </div>
 
@@ -787,7 +1115,7 @@ function AppShowcaseSection() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ════════���══════════════════════════════════════════════════════════════════════
 // SECTION 6 — DEVICE & SYSTEM
 // ═══════════════════════════════════════════════════════════════════════════════
 function SystemSection() {
@@ -807,14 +1135,10 @@ function SystemSection() {
           title={<>云边协同，<span style={{ color: C.violet }}>一平台连接整套生态</span></>}
           sub="从光伏逆变器到EV充电桩，AI云端规划 + 边缘毫秒执行，双层架构兼顾智能与可靠" />
 
-        {/* Devices grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 14, marginBottom: 24 }}>
-          {devices.map((d, i) => (
-            <FadeIn key={d.l} delay={i * .07}>
-              <DeviceCard {...d} />
-            </FadeIn>
-          ))}
-        </div>
+        {/* Energy Flow Diagram */}
+        <FadeIn>
+          <EnergyFlowDiagram />
+        </FadeIn>
 
         {/* Cloud ↔ Edge */}
         <FadeIn delay={0.15}>
@@ -990,19 +1314,19 @@ function BatterySection() {
               </div>
               <ResponsiveContainer width="100%" height={175}>
                 <AreaChart data={socData} margin={{ top: 4, right: 26, left: -22, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="ep-gSOC" x1="0" y1="0" x2="0" y2="1">
+                  <defs key="defs">
+                    <linearGradient id="bat-gSOC" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor={C.violet} stopOpacity={0.45} />
                       <stop offset="95%" stopColor={C.violet} stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.08)" />
-                  <XAxis dataKey="t" tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} interval={3} />
-                  <YAxis domain={[0,100]} tick={{ fill: C.muted, fontSize: 9 }} axisLine={false}
-                    tickLine={false} tickFormatter={v=>`${v}%`} />
-                  <Tooltip content={<ChartTip />} />
-                  <Area type="monotone" dataKey="s" name="SOC"
-                    stroke={C.violet} strokeWidth={2.5} fill="url(#ep-gSOC)" dot={false} />
+                  <CartesianGrid key="grid" strokeDasharray="3 3" stroke="rgba(139,92,246,0.08)" />
+                  <XAxis key="x-axis" dataKey="t" tick={{ fill: C.muted, fontSize: 9 }} axisLine={false} tickLine={false} interval={3} />
+                  <YAxis key="y-axis" domain={[0,100]} tick={{ fill: C.muted, fontSize: 9 }} axisLine={false}
+                    tickLine={false} tickFormatter={(v: number) => `${v}%`} />
+                  <Tooltip key="tooltip" content={<ChartTip />} />
+                  <Area key="area" type="monotone" dataKey="s" name="SOC"
+                    stroke={C.violet} strokeWidth={2.5} fill="url(#bat-gSOC)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 12 }}>
@@ -1042,12 +1366,12 @@ function StatsFooterSection() {
             gap: 16, textAlign: 'center',
           }}>
             {[
-              { v: 200, s: '万+', l: '全球在网设备', sub: '覆盖 40+ 国家',    c: C.blue   },
-              { v: 5,   s: '亿+', l: '历史学习数据', sub: '每日持续增长',     c: C.violet },
-              { v: 365, s: '天',  l: '持续自我学习', sub: 'AI 每天自动复盘',  c: C.cyan   },
-              { v: 90,  s: '%',   l: '发电预测精度', sub: '行业领先水平',     c: C.green  },
+              { v: 200, s: '万+', l: '全球在网设备', sub: '覆盖 40+ 国家',    c: C.blue,   id: 'stats-dev' },
+              { v: 5,   s: '亿+', l: '历史学习数据', sub: '每日持续增长',     c: C.violet, id: 'stats-data' },
+              { v: 365, s: '天',  l: '持续自我学习', sub: 'AI 每天自动复盘',  c: C.cyan,   id: 'stats-evolve' },
+              { v: 90,  s: '%',   l: '发电预测精度', sub: '行业领先水平',     c: C.green,  id: 'stats-acc' },
             ].map(m => (
-              <div key={m.l} style={{ padding: '20px 14px' }}>
+              <div key={m.id} style={{ padding: '20px 14px' }}>
                 <p style={{ fontSize: 'clamp(30px,4vw,50px)', fontWeight: 900, color: m.c, lineHeight: 1, marginBottom: 6 }}>
                   <Cnt target={m.v} suf={m.s} />
                 </p>
@@ -1082,16 +1406,6 @@ function StatsFooterSection() {
               }}>让储能更智能</span></h2>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginTop: 32 }}>
               <motion.button
-                whileHover={{ scale: 1.03, boxShadow: `0 12px 40px ${C.violet}50` }}
-                whileTap={{ scale: 0.97 }}
-                style={{
-                  padding: '14px 40px', borderRadius: 13, fontSize: 14, fontWeight: 700,
-                  background: `linear-gradient(135deg, ${C.purple}, ${C.cyan})`, color: '#fff', border: 'none',
-                  cursor: 'pointer', boxShadow: `0 8px 32px ${C.violet}35`,
-                }}>
-                立即申请演示 →
-              </motion.button>
-              <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 style={{
@@ -1099,7 +1413,7 @@ function StatsFooterSection() {
                   background: 'transparent', color: C.violet, cursor: 'pointer',
                   border: `1.5px solid ${C.violet}55`,
                 }}>
-                联系销售团队
+                联系展会工作人员抢先体验
               </motion.button>
             </div>
           </FadeIn>

@@ -12,18 +12,20 @@ import {
 import imgIsland    from "figma:asset/c82015b88aae056813836c7320cb3ffbbc95f59c.png";
 import imgCharacter from "figma:asset/145c786e2bcf2cb85c225b58b4e005b4d38df06c.png";
 import imgSuperBOM  from "figma:asset/75c83d9d54f05ea397af7572cdf7d2f6086ad21a.png";
-import imgProductLaunch from "figma:asset/f6775c1a73f62dd7c9d6f6b8733a7ac6bd24ca05.png";
-import imgGovQuery      from "figma:asset/d852a5c580fcc4a481db8b7bdcbca40acbffae60.png";
-import imgGovCrawler    from "figma:asset/87d32e5b4ea6229c72fdd99c8229a891b52ce6bd.png";
-import imgAutoSchedule  from "figma:asset/359d0572d5a1c1ed2e29f99ff937d951e2d50251.png";
-import imgEHS           from "figma:asset/b3476ea3574ea002cc6d4aafaee6ba43680c6291.png";
-import imgPSCAssistant  from "figma:asset/85263ff0a09ffda766ecb5820da0a331c70a3833.png";
-import imgMESMaterial   from "figma:asset/70275d705251c591db7bd82d0a90677d339667d0.png";
-import imgStaffSchedule from "figma:asset/cb1d7800356e2eb141b73bfc498e54345c0b3823.png";
-import imgWorkorderConfig from "figma:asset/9992fd72ccea755b662a8bf9db1c8862b0b45165.png";
-import imgPCBAMonitor    from "figma:asset/8b1a139d55e99812b60425b60b33572c632aa0cc.png";
-import imgPACKMonitor    from "figma:asset/846d5158c2621062bb5613ed21cb42aee9be9297.png";
-import imgPSCMonitor     from "figma:asset/dbc6cbc5b244330c281346a385267ab36b64aef4.png";
+// ── Project screenshot imports ────────────────────────────────────────────────
+import imgPscAssistant   from "figma:asset/85263ff0a09ffda766ecb5820da0a331c70a3833.png";
+import imgProductLaunch  from "figma:asset/cec4661fa5526aac86bde8e9b6f91bbe707427fe.png";
+import imgAutoSchedule   from "figma:asset/359d0572d5a1c1ed2e29f99ff937d951e2d50251.png";
+import imgFactoryBoard   from "figma:asset/0d7519c9e6e0aaec5eb9611ef15f2e86421b08d3.png";
+import imgStaffSchedule  from "figma:asset/cb1d7800356e2eb141b73bfc498e54345c0b3823.png";
+import imgMesMaterial    from "figma:asset/70275d705251c591db7bd82d0a90677d339667d0.png";
+import imgGovQuery       from "figma:asset/d852a5c580fcc4a481db8b7bdcbca40acbffae60.png";
+import imgEhsChecker     from "figma:asset/0393aa6ad31c6c45034821d52d072fe272b46581.png";
+import imgPackMonitor    from "figma:asset/846d5158c2621062bb5613ed21cb42aee9be9297.png";
+import imgPcbaMonitor    from "figma:asset/8b1a139d55e99812b60425b60b33572c632aa0cc.png";
+import imgPscMonitor     from "figma:asset/dbc6cbc5b244330c281346a385267ab36b64aef4.png";
+import imgWorkorderCfg   from "figma:asset/9992fd72ccea755b662a8bf9db1c8862b0b45165.png";
+import imgContainerCalc  from "figma:asset/d1b9a1b2267f45e3471f37acc41543056248bd9b.png";
 import EMSFrame         from "../imports/Frame1912054662";
 import { FloatingElement } from "./components/FloatingElement";
 import { GlassBubbleButton } from "./components/GlassBubbleButton";
@@ -38,7 +40,7 @@ const buttonDescriptions: Record<string, string> = {
   "智慧测试": "构建行业级智能失效分析闭环系统，实现测试数据自动收集、分析与反馈。测试覆盖率提升至95%，缺陷预测准确率达90%。",
   "智慧供应链": "爱士维构建供应商360度分析评级系统，从质量、交期、价格等多维度评估供应商表现，实现风险预警与智能调度。库存周转率提升 35%。",
   "智慧销售": "基于销售历史与市场动态数据，AI预测模型精准研判销售波动趋势，助力制定精准营销策略。系统支持动态定价与促销策略。",
-  "智慧能源": "爱士维构建虚拟电厂（VPP）平台，整合分布式光伏、储能与可控负荷，现智能调度与电力市场交易。推动园区能源结构优化与碳减排。",
+  "智慧能源": "爱士构建虚拟电厂（VPP）平台，整合分布式光伏、储能与可控负荷，现智能调度与电力市场交易。推动园区能源结构优化与碳减排。",
 };
 
 // ── Module sub-project types & data ──────────────────────────────────────────
@@ -78,7 +80,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: Package,
       title: "MES物料管理小程序",
       desc: "通过微信小程序扫码和信息录入完成物料各个生命周期的维护",
-      image: imgMESMaterial,
+      image: imgMesMaterial,
       tag: "微信小程序",
       tagColor: "bg-green-500/30 text-green-200 border-green-400/30",
     },
@@ -87,7 +89,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: Monitor,
       title: "PACK工厂监控系统",
       desc: "PACK组装实时监控与车间日累计数据统计，实现生产现场透明化与实时管控",
-      image: imgPACKMonitor,
+      image: imgPackMonitor,
       tag: "实时监控",
       tagColor: "bg-orange-500/30 text-orange-200 border-orange-400/30",
     },
@@ -96,7 +98,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: CircuitBoard,
       title: "PCBA工厂监控系统",
       desc: "PCBA SMT产线实时监控，实现SMT生产过程的透明化与实时管控",
-      image: imgPCBAMonitor,
+      image: imgPcbaMonitor,
       tag: "SMT产线",
       tagColor: "bg-cyan-500/30 text-cyan-200 border-cyan-400/30",
     },
@@ -105,7 +107,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: Sun,
       title: "光储充工厂监控系统",
       desc: "PSC产线全流程监控系统，涵盖包装需求统计、ATE/AGE测试监控、组装实时监控等核心功能",
-      image: imgPSCMonitor,
+      image: imgPscMonitor,
       tag: "光储充",
       tagColor: "bg-yellow-500/30 text-yellow-200 border-yellow-400/30",
     },
@@ -114,7 +116,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: ClipboardList,
       title: "工单目标配置系统",
       desc: "工单目标配置管理系统，支持ATE目标配置、光储充组装目标配置、PACK组装目标配置等功能",
-      image: imgWorkorderConfig,
+      image: imgWorkorderCfg,
       tag: "目标管理",
       tagColor: "bg-pink-500/30 text-pink-200 border-pink-400/30",
     },
@@ -159,7 +161,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: ShieldCheck,
       title: "EHS法律法规日期确认器",
       desc: "为了减少人工巡检EHS法规工作量，使用AI自动联网分析EHS更新情况",
-      image: imgEHS,
+      image: imgEhsChecker,
       tag: "AI合规",
       tagColor: "bg-green-500/30 text-green-200 border-green-400/30",
     },
@@ -168,37 +170,19 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       icon: Smartphone,
       title: "小程序-光储助手",
       desc: "解决最核心客诉问题，既满足客户满意度的同时减少了人力成本",
-      image: imgPSCAssistant,
+      image: imgPscAssistant,
       tag: "微信小程序",
       tagColor: "bg-amber-500/30 text-amber-200 border-amber-400/30",
-    },
-    {
-      id: "gov-crawler",
-      icon: Globe,
-      title: "政申通-政府项目爬虫",
-      desc: "为了减少人工动搜索，通过产品自动爬取适合公司申报的政府项目，并通过AI给出申请分析报告",
-      image: imgGovCrawler,
-      tag: "AI爬虫",
-      tagColor: "bg-cyan-500/30 text-cyan-200 border-cyan-400/30",
     },
   ],
 
   "智慧供应链": [
     {
-      id: "shortage-analysis",
-      icon: Bell,
-      title: "缺料分析及通知",
-      desc: "从工单缺料分析到交期反馈的全流程自动化管理，提升采购协同效率与物料交付可视化",
-      image: "https://images.unsplash.com/photo-1640529494825-4add7eed660e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400&q=80",
-      tag: "全流程自动化",
-      tagColor: "bg-red-500/30 text-red-200 border-red-400/30",
-    },
-    {
       id: "container-calc",
       icon: Box,
       title: "集装箱装载计算工具",
       desc: "智能装箱优化系统，支持多柜型、可视化装载与灵活分配",
-      image: "https://images.unsplash.com/photo-1621862681400-a2a7321dc1c2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400&q=80",
+      image: imgContainerCalc,
       tag: "装载优化",
       tagColor: "bg-teal-500/30 text-teal-200 border-teal-400/30",
     },
@@ -209,7 +193,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
       id: "ems-system",
       icon: Gauge,
       title: "EMS智慧能源管理",
-      desc: "EMS系统以「AI预测算法+智能调度策略」为核心，覆盖能源数据管理、预测分析、智能调度及用户交互四大维",
+      desc: "EMS系统以「AI预测算法+智能调度策略」为核心，覆盖能源数据管理、预测分析、智能调度用户交互四大维",
       image: "",
       preview: <EMSFrame />,
       tag: "AI预测",
@@ -220,7 +204,7 @@ const moduleProjects: Record<string, ModuleProject[]> = {
   "智慧测试": [],
 };
 
-// ── Module header config ───────────────────────────────────────────��─────────
+// ── Module header config ────────────────────────────────────────────────────
 const moduleConfig: Record<string, { icon: React.ElementType; accent: string; glow: string; iconBg: string }> = {
   "智慧生产":   { icon: Factory,     accent: "text-indigo-200",  glow: "rgba(99,102,241,0.4)",   iconBg: "bg-indigo-500/20 border-indigo-400/40" },
   "智慧销售":   { icon: TrendingUp,  accent: "text-emerald-200", glow: "rgba(52,211,153,0.35)",  iconBg: "bg-emerald-500/20 border-emerald-400/40" },
@@ -264,7 +248,7 @@ const willAICapabilities = [
     id: "integration",
     icon: GitMerge,
     title: "灵活交互与集成",
-    desc: "多种集成和交互模式，跨平台链接数据与体验，全位解决业务痛点问题",
+    desc: "多种集成和交互模式，跨平台链接数据与体验，全位解决务痛点问题",
     color: "from-cyan-500/20 to-teal-500/10",
     iconColor: "text-cyan-400",
     tag: "开放集成",
@@ -289,7 +273,7 @@ const willAICapabilities = [
   },
 ];
 
-// ── Ambient particles ─────────────────────────────────────────────────────────
+// ── Ambient particles ────────────────────────────────────────────────────────
 const PARTICLES = Array.from({ length: 18 }, (_, id) => ({
   id, w: 2 + ((id * 7) % 6), h: 2 + ((id * 5) % 6),
   left: `${(id * 17 + 3) % 100}%`, top: `${(id * 13 + 7) % 100}%`,
@@ -309,7 +293,7 @@ function AmbientParticles() {
   );
 }
 
-// ── Island ────────────────────────────────────────────────────────────────────
+// ── Island ───────────────────────────────────────────────────────────────────
 function AnimatedIsland() {
   const [hovered, setHovered] = useState(false);
   return (
@@ -567,7 +551,7 @@ function WillAIPanel({ onClose }: { onClose: () => void }) {
           <div className="flex items-center gap-3 mb-3">
             <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
             <span className="text-[9px] font-semibold tracking-[0.12em] uppercase" style={{ color: "rgba(255,255,255,0.28)" }}>
-              核心能力矩阵
+              心能力矩阵
             </span>
             <div className="h-px flex-1" style={{ background: "rgba(255,255,255,0.07)" }} />
           </div>
@@ -623,7 +607,7 @@ function WillAIPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Orbital ring ─────────────────────────────────────────────────────────────
+// ── Orbital ring ─────────────────────────────────────────────────────────
 function OrbitalRing() {
   return (
     <motion.div className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -719,14 +703,14 @@ export default function App() {
                 
                 {/* Character image — Duolingo-style bounce on absorb */}
                 <div style={{ transform: "translateY(65px)" }}>
-                  <motion.video
-                    src="https://raw.githubusercontent.com/kekisun0-blip/mp4/refs/heads/main/3%E6%9C%882%E6%97%A5.mp4"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
+                  <motion.img
+                    src="https://raw.githubusercontent.com/kekisun0-blip/mp4/04817aaec14d2c9e6685cefc8cdb6e5234db4182/3%E6%9C%883%E6%97%A5(1).gif"
+                    alt="爱小惟"
                     className="relative w-full h-full object-contain drop-shadow-xl"
-                    style={{ width: '80%', height: '80%' }}
+                    style={{
+                      width: '80%',
+                      height: '80%',
+                    }}
                     animate={
                       charAbsorbing
                         ? {
